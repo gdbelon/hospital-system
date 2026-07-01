@@ -14,20 +14,24 @@ def cadastrar_cliente(nome,telefone,email):
             return{"mensagem" : "Paciente Cadastrado"}
     except Exception as e:
         conn.rollback()
-        print(e)
+        return{"erro" : str(e)}
     finally:
         cur.close()
         conn.close()
 
-def procurar_cliente(nome):
+def procurar_cliente(id):
     conn = get_connection()
     cur = conn.cursor()
     try:
-        cur.execute('SELECT * FROM pacientes WHERE nome = %s', (nome,))
+        cur.execute('SELECT * FROM pacientes WHERE id = %s', (id,))
         row = cur.fetchone()
         if row is None:
             return {"mensagem": "Nenhum usuário encontrado"}
-        return {"paciente": row}
+        
+        colunas = []
+        for desc in cur.description:
+            colunas.append(desc[0])
+        return dict(zip(colunas, row))
     except Exception as e:
         conn.rollback()
         return {"erro": str(e)}
@@ -42,6 +46,7 @@ def alterar_dados_paciente(nome,telefone,email,id):
         cur.execute('UPDATE pacientes SET nome = %s, telefone = %s, email = %s WHERE id = %s',(nome,telefone,email,id))
         conn.commit()
         return {"mensagem" : "Atualização feita com sucesso"}
+        
     except Exception as e:
         conn.rollback()
         return {"erro" : str(e) }
@@ -49,5 +54,21 @@ def alterar_dados_paciente(nome,telefone,email,id):
         conn.close()
         cur.close()
         
-
+def deletar_paciente(id):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute('SELECT * FROM pacientes WHERE id = %s',(id,))
+        row = cur.fetchone()
+        if row is None:
+            return{"mensagem":"Nnehum Usuário Encontrado"}
+        cur.execute('DELETE FROM pacientes WHERE id = %s',(id,))
+        conn.commit()
+        return{"sistema" : f"Usuário {row} Deletado"}
+    except Exception as e:
+        conn.rollback()
+        return{"erro" : str(e)}
+    finally:
+        conn.close()
+        cur.close()
         
